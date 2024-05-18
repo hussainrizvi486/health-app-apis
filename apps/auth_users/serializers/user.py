@@ -16,5 +16,7 @@ class UserQuerysetSerializer(ModelSerializer):
             "date_of_birth",
             "image",
             "address",
+            "is_superuser",
         ]
+
         model = User

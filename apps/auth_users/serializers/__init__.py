@@ -1,2 +1,2 @@
 from .jwt_token import JWTTokenObtainSerializer
-from .user import UserQuerysetSerializer
+from .user import UserQuerysetSerializer, PatientAppointmentSerializer

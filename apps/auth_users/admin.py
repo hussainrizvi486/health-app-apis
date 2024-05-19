@@ -1,9 +1,30 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
-from .models import User, Doctor
+from .models import User, Doctor, DoctorEducation, Patient, PatientAppointment
 
 
-admin.site.register(Doctor)
+class DoctorEducationInline(admin.TabularInline):
+    model = DoctorEducation
+
+
+class DoctorAdmin(admin.ModelAdmin):
+    inlines = [DoctorEducationInline]
+
+
+admin.site.register(Doctor, DoctorAdmin)
+
+
+class PatientAppointmentInline(admin.TabularInline):
+    model = PatientAppointment
+
+
+class PatientAdmin(admin.ModelAdmin):
+    inlines = [PatientAppointmentInline]
+
+
+admin.site.register(Patient, PatientAdmin)
+admin.site.register(PatientAppointment)
+
 
 @admin.register(User)
 class UserAdminView(UserAdmin):

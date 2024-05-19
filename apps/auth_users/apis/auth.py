@@ -1,10 +1,12 @@
 from rest_framework import viewsets
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
-from apps.auth_users.models import User, Doctor
-from apps.auth_users.serializers import UserQuerysetSerializer
+from apps.auth_users.models import User, Doctor,DoctorEducation, Patient, PatientAppointment
+from apps.auth_users.serializers import UserQuerysetSerializer,PatientAppointmentSerializer
 from ..utils import load_request_body
 import json
+
+
 
 
 class UserCommonAPIS(viewsets.ViewSet):
@@ -34,6 +36,7 @@ class UserCommonAPIS(viewsets.ViewSet):
                 user_object["about"] = doctor_queryset.about
                 user_object["experience"] = doctor_queryset.experience
                 user_object["position"] = doctor_queryset.position
+                user_object["education"] =DoctorEducation.objects.filter(doctor=doctor_queryset).values("name", "start", "end")
 
             return Response(data=user_object)
         except User.DoesNotExist:
@@ -50,7 +53,6 @@ class UserCommonAPIS(viewsets.ViewSet):
     def get_doctor_profile_list(self, request):
         data = []
         userlist_queryset = User.objects.filter(role="Doctor")
-        role = request.GET.get("role")
         for user in userlist_queryset:
             doctor = Doctor.objects.get(user=user)
             data.append(
@@ -60,11 +62,18 @@ class UserCommonAPIS(viewsets.ViewSet):
                     "position": doctor.position,
                     "experience": doctor.experience,
                     "image": user.image.url if user.image else None,
+                    "education" :DoctorEducation.objects.filter(doctor=doctor).values("name", "start", "end")
                 }
             )
+        return Response(data=data)
 
-        if role:
-            userlist_queryset = userlist_queryset.filter(role=role)
+    def get_admin_profile_list(self, request):
+        userlist_queryset = User.objects.filter(role="Admin")
+        serialized_data = UserQuerysetSerializer(userlist_queryset, many=True)
+        return Response(data=serialized_data.data)
+
+    def get_patient_profile_list(self, request):
+        userlist_queryset = User.objects.filter(role="Patient")
         serialized_data = UserQuerysetSerializer(userlist_queryset, many=True)
         return Response(data=serialized_data.data)
 
@@ -84,6 +93,21 @@ class UserCommonAPIS(viewsets.ViewSet):
         except User.DoesNotExist:
             return Response(data={"message": f"No user found with id {user_id}"})
 
+    def current_patient_appointments(self, request):
+        try:
+            patient = Patient.objects.get(user=request.user)
+            print(patient.get_appointments())
+            return Response(data=patient.get_appointments())
+        except Exception as e:
+            return Response(data={"message":str(e)})
+        
+    def get_all_pending_appointments(self, request):
+        try:
+            appointments = PatientAppointment.objects.filter(status="Pending")
+            serialized_data =  PatientAppointmentSerializer(appointments, many=True)
+            return Response(data=serialized_data.data)
+        except Exception as e:
+            return Response(data={"message":str(e)})
 
 class RegisterProfilesAPIS(viewsets.ViewSet):
     def register_admin_profile(self, request):
@@ -97,9 +121,13 @@ class RegisterProfilesAPIS(viewsets.ViewSet):
         try:
             user_object = User.objects.create_superuser(**user_data)
             user_object.save()
-            return Response({"message": "User registered successfully"})
+            return Response({"message": "User registered successfully!"})
         except Exception as e:
-            return Response({"message": f"dasf: {str(e)}"}, status=500)
+            return Response({"message": str(e)}, status=500)
+
+    def register_patient_profile(self,request):
+
+        ...
 
     def register_doctor_profile(self, request):
         data = request.data
@@ -118,7 +146,11 @@ class RegisterProfilesAPIS(viewsets.ViewSet):
             "date_of_birth": user_data.get("date_of_birth"),
             "address": user_data.get("address"),
             "password": user_data.get("password"),
+            "role": user_data.get("role"),
         }
+        
+        education_data = user_data.get("education")
+         
         user = User.objects.create_user(**user_dict)
         user.save()
         doctor_profile_object = Doctor.objects.create(
@@ -127,7 +159,13 @@ class RegisterProfilesAPIS(viewsets.ViewSet):
             experience=user_data.get("experience"),
             position=user_data.get("position"),
         )
+
         doctor_profile_object.save()
+        if education_data:
+            for row in education_data:
+                edu_object = DoctorEducation.objects.create(doctor=doctor_profile_object, name=row.get("name"), start=row.get("start"), end=row.get("end"))
+                edu_object.save()
+
         return Response({"message": "Doctor profile created successfully"})
 
     def validate_user_profile_data(self, data: dict, role="") -> dict:
@@ -148,3 +186,5 @@ class RegisterProfilesAPIS(viewsets.ViewSet):
             if field not in data:
                 return {"message": f"{field} is missing!", "validated": False}
         return {"data": data, "validated": True}
+
+

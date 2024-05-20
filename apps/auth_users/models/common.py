@@ -2,9 +2,16 @@ from django.db import models
 from .user import User
 from django.utils import timezone
 from datetime import timedelta, datetime
+from uuid import uuid4
 
 
 class Doctor(models.Model):
+    id = models.UUIDField(
+        default=uuid4,
+        primary_key=True,
+        editable=False,
+        unique=True,
+    )
     experience = models.CharField(max_length=50, null=True, blank=True)
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     position = models.CharField(max_length=50, null=True, blank=True)
@@ -15,6 +22,12 @@ class Doctor(models.Model):
 
 
 class DoctorEducation(models.Model):
+    id = models.UUIDField(
+        default=uuid4,
+        primary_key=True,
+        editable=False,
+        unique=True,
+    )
     doctor = models.ForeignKey(Doctor, on_delete=models.CASCADE)
     name = models.CharField(max_length=10000)
     start = models.CharField(max_length=10000)
@@ -22,6 +35,12 @@ class DoctorEducation(models.Model):
 
 
 class Patient(models.Model):
+    id = models.UUIDField(
+        default=uuid4,
+        primary_key=True,
+        editable=False,
+        unique=True,
+    )
     user = models.OneToOneField(User, on_delete=models.CASCADE)
 
     def __str__(self) -> str:
@@ -45,6 +64,12 @@ class Patient(models.Model):
 
 
 class PatientAppointment(models.Model):
+    id = models.UUIDField(
+        default=uuid4,
+        primary_key=True,
+        editable=False,
+        unique=True,
+    )
     patient = models.ForeignKey(Patient, on_delete=models.CASCADE)
     doctor = models.ForeignKey(Doctor, on_delete=models.CASCADE, null=True)
     doctor_name = models.CharField(max_length=1000, null=True)

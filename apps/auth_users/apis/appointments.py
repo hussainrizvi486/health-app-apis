@@ -3,13 +3,38 @@ from rest_framework.response import Response
 from apps.auth_users.models import *
 from apps.auth_users.serializers import PatientAppointmentSerializer
 from ..utils import load_request_body
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.decorators import permission_classes
 
 
 class AppointmentApis(viewsets.ViewSet):
+    def approve_appointment(self, request):
+        data = load_request_body(request.data)
+        id = data.get("id")
+        appointment = PatientAppointment.objects.get(id=id)
+        appointment.status = "Scheduled"
+        appointment.save()
+        return Response(data={"message": "Appointment status updated successfully!"})
+
+    def cancel_appointment(self, request):
+        data = load_request_body(request.data)
+        id = data.get("id")
+        appointment = PatientAppointment.objects.get(id=id)
+        appointment.status = "Cancelled"
+        appointment.save()
+        return Response(data={"message": "Appointment status updated successfully!"})
+
+    def complete_appointment(self, request):
+        data = load_request_body(request.data)
+        id = data.get("id")
+        appointment = PatientAppointment.objects.get(id=id)
+        appointment.status = "Completed"
+        appointment.save()
+        return Response(data={"message": "Appointment status updated successfully!"})
+
     def current_patient_appointments(self, request):
         try:
             patient = Patient.objects.get(user=request.user)
-            print(patient.get_appointments())
             return Response(data=patient.get_appointments())
         except Exception as e:
             return Response(data={"message": str(e)})
@@ -22,12 +47,22 @@ class AppointmentApis(viewsets.ViewSet):
         except Exception as e:
             return Response(data={"message": str(e)})
 
+    def get_all_doctor_appointments(self, request):
+        try:
+            doctor = Doctor.objects.get(user=request.user)
+            appointments = PatientAppointment.objects.filter(
+                status="Pending", doctor=doctor
+            )
+            serialized_data = PatientAppointmentSerializer(appointments, many=True)
+            return Response(data=serialized_data.data)
+        except Exception as e:
+            return Response(data={"message": str(e)})
+
     def create_appointment(self, request):
         data = load_request_body(request.data)
 
         patient_id = data.get("patient_id")
         doctor_id = data.get("doctor_id")
-        doctor_name = data.get("doctor_name")
         appointment_date = data.get("appointment_date")
         start_time = data.get("start_time")
         end_time = data.get("end_time")
@@ -41,12 +76,11 @@ class AppointmentApis(viewsets.ViewSet):
             )
 
         try:
-            patient = Patient.objects.get(id=patient_id)
+            patient = Patient.objects.get(user__id=patient_id)
             doctor = Doctor.objects.get(id=doctor_id)
             appointment_obj = PatientAppointment.objects.create(
                 patient=patient,
                 doctor=doctor,
-                doctor_name=doctor_name,
                 appointment_date=appointment_date,
                 start_time=start_time,
                 end_time=end_time,

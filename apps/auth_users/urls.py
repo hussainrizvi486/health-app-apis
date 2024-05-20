@@ -3,9 +3,8 @@ from rest_framework_simplejwt.views import (
     TokenObtainPairView,
     TokenRefreshView,
 )
-
 from apps.auth_users.serializers import JWTTokenObtainSerializer
-from apps.auth_users.apis import UserCommonAPIS, RegisterProfilesAPIS
+from apps.auth_users.apis import UserCommonAPIS, RegisterProfilesAPIS, AppointmentApis
 
 
 class AuthTokenObtainPairView(TokenObtainPairView):
@@ -13,7 +12,6 @@ class AuthTokenObtainPairView(TokenObtainPairView):
 
 
 urlpatterns = [
-    path("api/token/", AuthTokenObtainPairView.as_view(), name="token_obtain_pair"),
     path(
         "api/user/admin/login",
         AuthTokenObtainPairView.as_view(),
@@ -29,12 +27,7 @@ urlpatterns = [
         AuthTokenObtainPairView.as_view(),
         name="token_obtain_pair",
     ),
-    path("api/token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
     # USER APIS
-    path(
-        "api/manage/profile/list",
-        UserCommonAPIS.as_view({"get": "get_user_profile_list"}),
-    ),
     path(
         "api/user/profile/delete",
         UserCommonAPIS.as_view({"post": "delete_user_profile"}),
@@ -47,6 +40,10 @@ urlpatterns = [
     path(
         "api/register/user/doctor",
         RegisterProfilesAPIS.as_view({"post": "register_doctor_profile"}),
+    ),
+    path(
+        "api/register/user/patient",
+        RegisterProfilesAPIS.as_view({"post": "register_patient_profile"}),
     ),
     # --------------------------------------------
     path(
@@ -62,15 +59,43 @@ urlpatterns = [
         UserCommonAPIS.as_view({"get": "get_patient_profile_list"}),
     ),
     path(
-        "api/profile/detail",
+        "api/admin/profile/detail",
         UserCommonAPIS.as_view({"get": "get_user_profile_details"}),
     ),
     path(
+        "api/doctor/profile/detail",
+        UserCommonAPIS.as_view({"get": "get_doctor_profile_detail"}),
+    ),
+    path(
+        "api/doctor/profile/detail",
+        UserCommonAPIS.as_view({"get": "get_patient_profile_detail"}),
+    ),
+    path(
         "api/appointments/pending",
-        UserCommonAPIS.as_view({"get": "get_all_pending_appointments"}),
+        AppointmentApis.as_view({"get": "get_all_pending_appointments"}),
     ),
     path(
         "api/patient/my-appointments",
-        UserCommonAPIS.as_view({"get": "current_patient_appointments"}),
+        AppointmentApis.as_view({"get": "current_patient_appointments"}),
+    ),
+    path(
+        "api/doctor/appointments/all",
+        AppointmentApis.as_view({"get": "get_all_doctor_appointments"}),
+    ),
+    path(
+        "api/appointments/create",
+        AppointmentApis.as_view({"post": "create_appointment"}),
+    ),
+    path(
+        "api/appointments/approve",
+        AppointmentApis.as_view({"post": "approve_appointment"}),
+    ),
+    path(
+        "api/appointments/cancel",
+        AppointmentApis.as_view({"post": "cancel_appointment"}),
+    ),
+    path(
+        "api/appointments/complete",
+        AppointmentApis.as_view({"post": "complete_appointment"}),
     ),
 ]

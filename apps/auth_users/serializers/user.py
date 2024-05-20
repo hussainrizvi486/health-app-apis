@@ -53,6 +53,7 @@ class PatientAppointmentSerializer(ModelSerializer):
         fields = [
             "patient",
             "doctor",
+            "id",
             "doctor_name",
             "appointment_date",
             "start_time",

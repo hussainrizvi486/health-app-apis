@@ -67,7 +67,7 @@ urlpatterns = [
         UserCommonAPIS.as_view({"get": "get_doctor_profile_detail"}),
     ),
     path(
-        "api/doctor/profile/detail",
+        "api/patient/profile/detail",
         UserCommonAPIS.as_view({"get": "get_patient_profile_detail"}),
     ),
     path(

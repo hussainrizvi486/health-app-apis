@@ -4,7 +4,12 @@ from rest_framework_simplejwt.views import (
     TokenRefreshView,
 )
 from apps.auth_users.serializers import JWTTokenObtainSerializer
-from apps.auth_users.apis import UserCommonAPIS, RegisterProfilesAPIS, AppointmentApis
+from apps.auth_users.apis import (
+    UserCommonAPIS,
+    RegisterProfilesAPIS,
+    AppointmentApis,
+    UpdateProfilesAPIS,
+)
 
 
 class AuthTokenObtainPairView(TokenObtainPairView):
@@ -79,9 +84,31 @@ urlpatterns = [
         AppointmentApis.as_view({"get": "current_patient_appointments"}),
     ),
     path(
+        "api/appointments/all",
+        AppointmentApis.as_view({"get": "get_all_appointments"}),
+    ),
+    path(
+        "api/appointments/all/scheduled",
+        AppointmentApis.as_view({"get": "get_all_appointments_scheduled"}),
+    ),
+    path(
+        "api/appointments/all/pending",
+        AppointmentApis.as_view({"get": "get_all_appointments_pending"}),
+    ),
+    # 
+    path(
         "api/doctor/appointments/all",
         AppointmentApis.as_view({"get": "get_all_doctor_appointments"}),
     ),
+    path(
+        "api/doctor/appointments/scheduled",
+        AppointmentApis.as_view({"get": "get_scheduled_doctor_appointments"}),
+    ),
+    path(
+        "api/doctor/appointments/cancel",
+        AppointmentApis.as_view({"get": "get_cancel_doctor_appointments"}),
+    ),
+    # 
     path(
         "api/appointments/create",
         AppointmentApis.as_view({"post": "create_appointment"}),
@@ -97,5 +124,17 @@ urlpatterns = [
     path(
         "api/appointments/complete",
         AppointmentApis.as_view({"post": "complete_appointment"}),
+    ),
+    path(
+        "api/user/admin/update",
+        UpdateProfilesAPIS.as_view({"post": "update_admin_profile"}),
+    ),
+    path(
+        "api/user/patient/update",
+        UpdateProfilesAPIS.as_view({"post": "update_patient_profile"}),
+    ),
+    path(
+        "api/user/doctor/update",
+        UpdateProfilesAPIS.as_view({"post": "update_doctor_profile"}),
     ),
 ]

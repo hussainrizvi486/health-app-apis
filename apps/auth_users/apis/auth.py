@@ -37,6 +37,7 @@ class UserCommonAPIS(viewsets.ViewSet):
                 ),
                 "phone_number": user_queryset.phone_number,
             }
+
             return Response(data=user_object)
         except User.DoesNotExist:
             return Response(data={"message": f"No user found with id {user_id}"})
@@ -241,6 +242,93 @@ class RegisterProfilesAPIS(viewsets.ViewSet):
             "address",
             "password",
             # "image",
+        ]
+
+        for field in mandatory_fields:
+            if field not in data:
+                return {"message": f"{field} is missing!", "validated": False}
+        return {"data": data, "validated": True}
+
+
+class UpdateProfilesAPIS(viewsets.ViewSet):
+    def update_admin_profile(self, request):
+        data = request.data
+        data = load_request_body(data)
+        validated_object = self.validate_user_profile_data(dict(data))
+        if not validated_object.get("validated"):
+            return Response({"message": validated_object.get("message")}, status=400)
+
+        user_data = validated_object.get("data")
+
+        id = user_data.get("id")
+        del user_data["id"]
+        User.objects.filter(id=id).update(**user_data)
+        return Response({"message": "Admin updated successfully!"})
+
+    def update_patient_profile(self, request):
+        data = request.data
+        data = load_request_body(data)
+        validated_object = self.validate_user_profile_data(dict(data))
+        if not validated_object.get("validated"):
+            return Response({"message": validated_object.get("message")}, status=400)
+
+        user_data = validated_object.get("data")
+        id = user_data.get("id")
+        del user_data["id"]
+        User.objects.filter(id=id).update(**user_data)
+        return Response({"message": "Patient updated successfully!"})
+
+    def update_doctor_profile(self, request):
+        data = request.data
+        data = load_request_body(data)
+        validated_object = self.validate_user_profile_data(dict(data))
+        if not validated_object.get("validated"):
+            return Response({"message": validated_object.get("message")}, status=400)
+
+        user_data: dict = validated_object.get("data")
+        user_dict = {
+            "first_name": user_data.get("first_name"),
+            "last_name": user_data.get("last_name"),
+            "email": user_data.get("email"),
+            "phone_number": user_data.get("phone_number"),
+            "gender": user_data.get("gender"),
+            "date_of_birth": user_data.get("date_of_birth"),
+            "address": user_data.get("address"),
+        }
+
+        education_data = user_data.get("education")
+        id = user_data.get("id")
+        User.objects.filter(id=id).update(**user_dict)
+        user = User.objects.get(id=id)
+        Doctor.objects.filter(user=user).update(
+            user=user,
+            about=user_data.get("about"),
+            experience=user_data.get("experience"),
+            position=user_data.get("position"),
+        )
+
+        doctor_profile_object = Doctor.objects.get(user=user)
+        DoctorEducation.objects.filter(doctor=doctor_profile_object).delete()
+        if education_data:
+            for row in education_data:
+                edu_object = DoctorEducation.objects.create(
+                    doctor=doctor_profile_object,
+                    name=row.get("name"),
+                    start=row.get("start"),
+                    end=row.get("end"),
+                )
+                edu_object.save()
+
+        return Response({"message": "Doctor profile updated successfully"})
+
+    def validate_user_profile_data(self, data: dict) -> dict:
+        mandatory_fields = [
+            "first_name",
+            "last_name",
+            "phone_number",
+            "gender",
+            "date_of_birth",
+            # "address",
         ]
 
         for field in mandatory_fields:

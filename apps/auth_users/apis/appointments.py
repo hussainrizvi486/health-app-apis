@@ -41,7 +41,32 @@ class AppointmentApis(viewsets.ViewSet):
 
     def get_all_pending_appointments(self, request):
         try:
-            appointments = PatientAppointment.objects.filter(status="Pending")
+            doctor = Doctor.objects.get(user=request.user)
+            appointments = PatientAppointment.objects.filter(
+                status="Pending", doctor=doctor
+            )
+            serialized_data = PatientAppointmentSerializer(appointments, many=True)
+            return Response(data=serialized_data.data)
+        except Exception as e:
+            return Response(data={"message": str(e)})
+
+    def get_cancel_doctor_appointments(self, request):
+        try:
+            doctor = Doctor.objects.get(user=request.user)
+            appointments = PatientAppointment.objects.filter(
+                status="Cancelled", doctor=doctor
+            )
+            serialized_data = PatientAppointmentSerializer(appointments, many=True)
+            return Response(data=serialized_data.data)
+        except Exception as e:
+            return Response(data={"message": str(e)})
+
+    def get_scheduled_doctor_appointments(self, request):
+        try:
+            doctor = Doctor.objects.get(user=request.user)
+            appointments = PatientAppointment.objects.filter(
+                status="Scheduled", doctor=doctor
+            )
             serialized_data = PatientAppointmentSerializer(appointments, many=True)
             return Response(data=serialized_data.data)
         except Exception as e:
@@ -53,6 +78,30 @@ class AppointmentApis(viewsets.ViewSet):
             appointments = PatientAppointment.objects.filter(
                 status="Pending", doctor=doctor
             )
+            serialized_data = PatientAppointmentSerializer(appointments, many=True)
+            return Response(data=serialized_data.data)
+        except Exception as e:
+            return Response(data={"message": str(e)})
+
+    def get_all_appointments(self, request):
+        try:
+            appointments = PatientAppointment.objects.all()
+            serialized_data = PatientAppointmentSerializer(appointments, many=True)
+            return Response(data=serialized_data.data)
+        except Exception as e:
+            return Response(data={"message": str(e)})
+
+    def get_all_appointments_pending(self, request):
+        try:
+            appointments = PatientAppointment.objects.filter(status="Pending")
+            serialized_data = PatientAppointmentSerializer(appointments, many=True)
+            return Response(data=serialized_data.data)
+        except Exception as e:
+            return Response(data={"message": str(e)})
+
+    def get_all_appointments_scheduled(self, request):
+        try:
+            appointments = PatientAppointment.objects.filter(status="Scheduled")
             serialized_data = PatientAppointmentSerializer(appointments, many=True)
             return Response(data=serialized_data.data)
         except Exception as e:
